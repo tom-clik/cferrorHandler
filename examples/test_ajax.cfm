@@ -6,6 +6,5 @@ writeDump(request.prc);
 
 throw(message="Test error",detail="This is a deliberately thrown error to test the system",type="custom");
 
-
 </cfscript>
 			

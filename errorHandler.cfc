@@ -9,19 +9,41 @@ Used as a proper object.
 
 ```cfml
 onError(e) {
-	new errors.ErrorHandler(e=e,isAjaxRequest=request.isAjaxRequest,errorsFolder=this.errorsFolder);
+	new cferrorHandler.errorHandler(e=e,isAjaxRequest=request.isAjaxRequest);
 }
 ```
+
+### Using a custom logger
+
+A custom logger should implement the 
 
 
  */ 
 component {
+	/**
+	 * Initialise error
+	 * 
+	 * @e       CFML exception
+	 * @isAjaxRequest  boolean     Return JSON formatted version
+	 * @pageTemplate   Page template for error display. The fields "usermessage","code","statustext","id" should be enclosed in double braces {{}} (mustache style)
+	 * @debug        Dump the error instead of displaying error page
+	 * @logger       Custom logging component. See loggerInterface and the textLogger example
+	 */
+	public void function init(
+		required any      e, 
+		         boolean  isAjaxRequest=0,  
+		         string pageTemplate="", 
+		         boolean debug=0, 
+		         any logger,
+		         string message = "Sorry, an error has occurred"
+		) {
 
-	public void function init(e, boolean isAjaxRequest=0, errorsFolder="", pageTemplate="", debug=0) {
-		
-		this.errorsFolder = arguments.errorsFolder;
+		if ( arguments.keyExists("logger") ) {
+			variables.logger = arguments.logger;
+		}
+
 		var userError = [
-			"usermessage"="Sorry, an error has occurred",
+			"usermessage"=arguments.message,
 			"message"=arguments.e.message,
 			"detail"=arguments.e.detail,
 			"code"=arguments.e.errorcode,
@@ -59,7 +81,7 @@ component {
 				userError.report = 0;
 				break;
 
-			case "missinginclude": case  "notfound": case  "notfounddetail":case "not found":
+			case "missinginclude": case  "notfound": case  "notfounddetail": case "not found":
 				userError.statuscode="410";
 				userError.statustext="Page not found";
 				userError.report = 0;
@@ -70,7 +92,7 @@ component {
 				arguments.isAjaxRequest = 1;
 				break;
 			case  "custom":
-				// custom error messages show thrown message
+				// custom errors show thrown message
 				userError.usermessage  = userError.message;
 				break;
 		}
@@ -83,12 +105,19 @@ component {
 				"message" : arguments.debug ? userError.message : userError.usermessage
 			}
 			
+			// note we don't set a status for reported errors
+			// typically we want the client side app to display a friendly
+			// message for these.
 			if (userError.report) {
 				local.error["id"] = userError.id;
 				logError(userError);
 			}
+			else {
+				cfheader( statuscode=userError.statuscode, statustext=userError.statustext );
+			}
 			content type="application/json; charset=utf-8";
 			WriteOutput(serializeJSON(local.error));
+
 		}
 		else {
 			if (arguments.debug) {
@@ -105,12 +134,8 @@ component {
 
 				logError(userError);
 				
-				local.errortext = "<h1>Error</h1>";
-				local.errortext &= "<p>" & userError.usermessage & "</p>";
-				local.errortext &= "<p>Please contact support quoting ref #userError.id#</p>";
-				
 				if (arguments.pageTemplate EQ "") {
-					arguments.pageTemplate = "<h1>Error</h1><p>{{usermessage}}</p>" &
+					arguments.pageTemplate = "<h1>{{usermessage}}</h1>" &
 											"<p>Please contact support quoting ref {{id}}</p>";
 				}
 				
@@ -126,20 +151,9 @@ component {
 		
 	}
 
-	public boolean function logError(required struct error) {
-		local.errorCode = 0;
-		if (this.errorsFolder != "")  {
-			try {
-				local.filename = this.errorsFolder & "/" & arguments.error.id & ".html";
-				writeDump(var=error,output=local.filename,format="html");
-				local.errorCode = 1;
-			}
-			catch (any e) {
-				// ignore failure to write to log
-			}
+	public void function logError(required struct error) {
+		if ( variables.keyExists("logger") ) {
+			variables.logger.log( arguments.error );
 		}
-
-		return local.errorCode;
-
 	}
 }

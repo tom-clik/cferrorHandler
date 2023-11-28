@@ -1,10 +1,21 @@
+/**
+ * Log errors as CFDUMP to folder
+ *
+ * See errorHandler
+ */
 component implements="loggerInterface" {
 
+	/**
+	 * @folder   Directory to log errors to
+	 */
 	public function init(required string folder) {
 		variables.folder = arguments.folder;
+		return this;
 	}
 
+	// CFDUMP the error to a text file.
 	public boolean function log(required struct error) {
+		
 		local.errorCode = 0;
 			
 		try {
@@ -16,7 +27,6 @@ component implements="loggerInterface" {
 			// ignore failure to write to log
 		}
 		
-
 		return local.errorCode;
 
 	}

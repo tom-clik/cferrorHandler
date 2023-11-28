@@ -21,7 +21,7 @@ To actually log errors, you will need to pass in a logging component. This might
 The component allows the ExtendedInfo for an error to contain debug information. When throwing an error, serialise the data you want to debug and the errorHandler will deserialize it.
 
 ```cfscript
-local.extendedinfo = {"tagcontext"=e.tagcontext,"data"=data};
+local.extendedinfo = {"data"=data};
 throw(
 	extendedinfo = SerializeJSON(local.extendedinfo),
 	message      = "Unable to do something:" & e.message, 
@@ -67,28 +67,17 @@ The `isAjaxRequest` argument will return JSON.
 ## Sample Code
 
 ```cfscript
-
-onApplicationStart() {
-	application.errorLogger = logger.ErrorLogger(id=xx,secret=xx,queue=xxx);	
-}
-
 onError(e) {
-	local.args = {
-		e=e
-	};
-	// If we're in an API call, return JSON.
-	// Use your own logic clause here. 
-	if (logic for is ajax request) {
-		local.args.isAjaxRequest = 1;
-	}
-	if (application.keyExists("errorLogger")) {
-		local.args.logger = application.errorLogger;
-	}
-	else {
-		// Note /logs/_errors should be a mapping outside webroot
-		local.args.logger = new cferrorHandler.textLogger( ExpandPath("/logs/_errors") );
-	}
+	param request.prc = {};
 
-	new cferrorHandler.errorHandler(argumentCollection=);
+	local.args = {
+		e=e,
+		debug=request.prc.debug ? : 0,
+		isAjaxRequest=request.prc.isAjaxRequest ? : 0,
+		pageTemplate=application.errorTemplate ? : "",
+		logger= application.errorLogger ? : new textLogger( ExpandPath("/logs/_errors") )
+	};
+
+	new errorHandler(argumentCollection=local.args);
 }
 ```

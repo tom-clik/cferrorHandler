@@ -28,6 +28,7 @@ component {
 	 * @pageTemplate   Page template for error display. The fields "usermessage","code","statustext","id" should be enclosed in double braces {{}} (mustache style)
 	 * @debug        Dump the error instead of displaying error page
 	 * @logger       Custom logging component. See loggerInterface and the textLogger example
+	 * @message      Error to display to user. Note that if the "type" of the exception is "custom", the exception error message will be shown.
 	 */
 	public void function init(
 		required any      e, 

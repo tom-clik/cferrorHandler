@@ -9,13 +9,15 @@ Used as a proper object.
 
 ```cfml
 onError(e) {
-	new cferrorHandler.errorHandler(e=e,isAjaxRequest=request.isAjaxRequest);
+	new cferrorHandler.errorHandler(e=e);
 }
 ```
 
 ### Using a custom logger
 
-A custom logger should implement the 
+A custom logger should implement the Logger interface (loggerInterface.cfc). 
+
+See the supplied text logger (textLogger.cfc) example.
 
 
  */ 

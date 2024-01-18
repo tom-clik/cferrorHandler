@@ -185,7 +185,7 @@ component accessors="true" {
 		}
 	}
 
-	/** return error as simle struct */
+	/** return error as simple struct */
 	public struct function getError() {
 
 		return {

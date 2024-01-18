@@ -21,7 +21,20 @@ See the supplied text logger (textLogger.cfc) example.
 
 
  */ 
-component {
+component accessors="true" {
+
+	property name="usermessage" type="string";
+	property name="message" type="string";
+	property name="detail" type="string";
+	property name="code" type="string";
+	property name="ExtendedInfo";
+	property name="type" type="string";
+	property name="tagcontext";	
+	property name="statuscode" type="integer" default=500 type="string";
+	property name="statustext" type="string" default="Error";
+	property name="report" type="boolean" default=true;
+	property name="id" type="uuid" default="#createUUID()#";
+
 	/**
 	 * Initialise error
 	 * 
@@ -31,6 +44,7 @@ component {
 	 * @debug        Dump the error instead of displaying error page
 	 * @logger       Custom logging component. See loggerInterface and the textLogger example
 	 * @message      Error to display to user. Note that if the "type" of the exception is "custom", the exception error message will be shown.
+	 * @abort        Abort and show error page (or dump if debug)
 	 */
 	public void function init(
 		required any      e, 
@@ -38,56 +52,51 @@ component {
 		         string pageTemplate="", 
 		         boolean debug=0, 
 		         any logger,
-		         string message = "Sorry, an error has occurred"
+		         string message = "Sorry, an error has occurred",
+		         boolean abort=1
 		) {
 
 		if ( arguments.keyExists("logger") ) {
 			variables.logger = arguments.logger;
 		}
 
-		var userError = [
-			"usermessage"=arguments.message,
-			"message"=arguments.e.message,
-			"detail"=arguments.e.detail,
-			"code"=arguments.e.errorcode,
-			"ExtendedInfo"=deserializeJSON(arguments.e.ExtendedInfo),
-			"type"=arguments.e.type,
-			"statuscode"=500,
-			"statustext"="Error",
-			"report"=1,
-			"id"=createUUID()
-		];
-
+		variables.usermessage = arguments.message;
+		variables.message =arguments.e.message;
+		variables.detail =arguments.e.detail;
+		variables.code =arguments.e.errorcode;
+		variables.ExtendedInfo = deserializeJSON(arguments.e.ExtendedInfo);
+		variables.type =arguments.e.type;
+		
 		// supply original tag context in extended info if you have caught and rethrown an error
-		if ( isStruct( userError.ExtendedInfo ) AND userError.ExtendedInfo.keyExists( "tagcontext" ) ) {
-			userError["tagcontext"] =  userError.ExtendedInfo.tagcontext;
-			StructDelete(userError.ExtendedInfo,"tagcontext");
+		if ( isStruct( variables.ExtendedInfo ) AND variables.ExtendedInfo.keyExists( "tagcontext" ) ) {
+			variables.tagcontext =  variables.ExtendedInfo.tagcontext;
+			StructDelete(variables.ExtendedInfo,"tagcontext");
 		}
 		else {
-			userError["tagcontext"] =  e.TagContext;
+			variables.tagcontext =  arguments.e.TagContext;
 		}
 		
-		switch ( userError.type ) {
+		switch ( type ) {
 			case  "badrequest": case "validation":
-				userError.statuscode="400";
-				userError.statustext="Bad Request";
-				userError.report = 0;
+				variables.statuscode="400";
+				variables.statustext="Bad Request";
+				variables.report = 0;
 				break;
 			case  "forbidden":
-				userError.statuscode="403";
-				userError.statustext="Forbidden";
-				userError.report = 0;
+				variables.statuscode="403";
+				variables.statustext="Forbidden";
+				variables.report = 0;
 				break;
 			case  "Unauthorized":
-				userError.statuscode="401";
-				userError.statustext="Unauthorized";
-				userError.report = 0;
+				variables.statuscode="401";
+				variables.statustext="Unauthorized";
+				variables.report = 0;
 				break;
 
 			case "missinginclude": case  "notfound": case  "notfounddetail": case "not found":
-				userError.statuscode="410";
-				userError.statustext="Page not found";
-				userError.report = 0;
+				variables.statuscode="410";
+				variables.statustext="Page not found";
+				variables.report = 0;
 				break;
 			case "ajaxerror":
 				// avoid throwing ajaxerror. better to set isAjaxRequest
@@ -96,67 +105,101 @@ component {
 				break;
 			case  "custom":
 				// custom errors show thrown message
-				userError.usermessage  = userError.message;
+				variables.usermessage  = variables.message;
 				break;
 		}
-		
+		// check if we've already start writing page.
+		local.IsCommitted = GetPageContext().GetResponse().IsCommitted();
+
 		if (arguments.isAjaxRequest) {
 
 			local.error = {
-				"statustext": userError.statustext,
-				"statuscode": userError.statuscode,
-				"message" : arguments.debug ? userError.message : userError.usermessage
+				"statustext": variables.statustext,
+				"statuscode": variables.statuscode,
+				"message" : arguments.debug ? variables.message : variables.usermessage
 			}
 			
 			// note we don't set a status for reported errors
 			// typically we want the client side app to display a friendly
 			// message for these.
-			if (userError.report) {
-				local.error["id"] = userError.id;
-				logError(userError);
+			if (report) {
+				local.error["id"] = variables.id;
+				logError(getError());
 			}
 			else {
-				cfheader( statuscode=userError.statuscode, statustext=userError.statustext );
+				if ( NOT local.IsCommitted  ) {
+					cfheader( statuscode=variables.statuscode, statustext=variables.statustext );
+					cfheader( name="errorText", value=variables.statustext );
+				
+				}
 			}
-			content type="application/json; charset=utf-8";
+			if ( NOT local.IsCommitted  ) {
+				content type="application/json; charset=utf-8";
+			}
 			WriteOutput(serializeJSON(local.error));
 
 		}
 		else {
 			if (arguments.debug) {
-				cfheader( statuscode=userError.statuscode, statustext=userError.statustext );
-				writeDump(var=userError,label="Error");
-			}
-			else {
-				
-				cfheader( statuscode=userError.statuscode, statustext=userError.statustext );
-				
-				if (! userError.report) {
+				if ( arguments.abort ) {
+					writeDump(var=getError(),label="Error");
 					abort;
 				}
+			}
+			else {
 
-				logError(userError);
-				
-				if (arguments.pageTemplate EQ "") {
-					arguments.pageTemplate = "<h1>{{usermessage}}</h1>" &
-											"<p>Please contact support quoting ref {{id}}</p>";
+				if ( variables.report) {
+					logError(getError());
 				}
 				
-				for (local.field in ["usermessage","code","statustext","id"]) {
-					arguments.pageTemplate = Replace(arguments.pageTemplate,"{{#local.field#}}", userError[local.field],"all");
-				}
+				if ( arguments.abort ) {
+					if ( NOT local.IsCommitted  ) {
+						cfheader( statuscode=variables.statuscode, statustext=variables.statustext );
+					}
+					if ( ! variables.report) {
+						abort;
+					}					
+					
+					if (arguments.pageTemplate EQ "") {
+						arguments.pageTemplate = "<h1>{{usermessage}}</h1>" &
+												"<p>Please contact support quoting ref {{id}}</p>";
+					}
+					
+					for (local.field in ["usermessage","code","statustext","id"]) {
+						arguments.pageTemplate = ReplaceNoCase(arguments.pageTemplate,"{{#local.field#}}", variables[local.field],"all");
+					}
 
-				writeOutput(arguments.pageTemplate);
+					writeOutput(arguments.pageTemplate);
+					abort;
+				}
 				
 			}
 			
 		}
-		
+
 	}
 
 	public void function logError(required struct error) {
 		if ( variables.keyExists("logger") ) {
 			variables.logger.log( arguments.error );
+		}
+	}
+
+	/** return error as simple struct */
+	public struct function getError() {
+
+		return {
+			"usermessage"=variables.usermessage,
+			"message"=variables.message,
+			"detail"=variables.detail,
+			"code"=variables.code,
+			"ExtendedInfo"=variables.ExtendedInfo,
+			"type"=variables.type,
+			"statuscode"=variables.statuscode,
+			"statustext"=variables.statustext,
+			"report"=variables.report,
+			"id"=variables.id,
+			"tagcontext"=variables.tagcontext
 		}
 	}
 }

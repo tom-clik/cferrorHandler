@@ -1,7 +1,8 @@
 <cfscript>
-// When debug is set, we dump the error to page (unless in Ajax)
-// Note here we show a typical catch and throw. The tag context
-// of the original error will be preserved
+// the handler can be used as a general logger with abort=0
+// the advantage of doing this over passing straight to your
+// logger is that it will get the tag context and the extendedinfo
+
 request.prc.debug = 1;
 
 try{

@@ -105,10 +105,12 @@ component accessors="true" {
 				break;
 			case  "custom":
 				// custom errors show thrown message
-				variables.usermessage  = message;
+				variables.usermessage  = variables.message;
 				break;
 		}
-		
+		// check if we've already start writing page.
+		local.IsCommitted = GetPageContext().GetResponse().IsCommitted();
+
 		if (arguments.isAjaxRequest) {
 
 			local.error = {
@@ -125,16 +127,21 @@ component accessors="true" {
 				logError(getError());
 			}
 			else {
-				cfheader( statuscode=variables.statuscode, statustext=variables.statustext );
+				if ( NOT local.IsCommitted  ) {
+					cfheader( statuscode=variables.statuscode, statustext=variables.statustext );
+					cfheader( name="errorText", value=variables.statustext );
+				
+				}
 			}
-			content type="application/json; charset=utf-8";
+			if ( NOT local.IsCommitted  ) {
+				content type="application/json; charset=utf-8";
+			}
 			WriteOutput(serializeJSON(local.error));
 
 		}
 		else {
 			if (arguments.debug) {
 				if ( arguments.abort ) {
-					cfheader( statuscode=variables.statuscode, statustext=variables.statustext );
 					writeDump(var=getError(),label="Error");
 					abort;
 				}
@@ -146,9 +153,10 @@ component accessors="true" {
 				}
 				
 				if ( arguments.abort ) {
-
-					cfheader( statuscode=variables.statuscode, statustext=variables.statustext );
-					if ( ! report) {
+					if ( NOT local.IsCommitted  ) {
+						cfheader( statuscode=variables.statuscode, statustext=variables.statustext );
+					}
+					if ( ! variables.report) {
 						abort;
 					}					
 					
@@ -158,7 +166,7 @@ component accessors="true" {
 					}
 					
 					for (local.field in ["usermessage","code","statustext","id"]) {
-						arguments.pageTemplate = Replace(arguments.pageTemplate,"{{#local.field#}}", variables[local.field],"all");
+						arguments.pageTemplate = ReplaceNoCase(arguments.pageTemplate,"{{#local.field#}}", variables[local.field],"all");
 					}
 
 					writeOutput(arguments.pageTemplate);

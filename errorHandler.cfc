@@ -44,6 +44,7 @@ component accessors="true" {
 	 * @debug        Dump the error instead of displaying error page
 	 * @logger       Custom logging component. See loggerInterface and the textLogger example
 	 * @message      Error to display to user. Note that if the "type" of the exception is "custom", the exception error message will be shown.
+	 * @ExtendedInfo  Manually supply extended info when using as a logger
 	 * @abort        Abort and show error page (or dump if debug)
 	 */
 	public void function init(
@@ -53,6 +54,7 @@ component accessors="true" {
 		         boolean debug=0, 
 		         any logger,
 		         string message = "Sorry, an error has occurred",
+		         struct ExtendedInfo,
 		         boolean abort=1
 		) {
 
@@ -67,6 +69,10 @@ component accessors="true" {
 		variables.ExtendedInfo = deserializeJSON(arguments.e.ExtendedInfo);
 		variables.type =arguments.e.type;
 		
+		// when using the handler as a logger, sometimes we just want to supply this
+		if ( StructKeyExists( arguments, "ExtendedInfo" ) ) {
+			variables.ExtendedInfo = arguments.ExtendedInfo;
+		}
 		// supply original tag context in extended info if you have caught and rethrown an error
 		if ( isStruct( variables.ExtendedInfo ) AND variables.ExtendedInfo.keyExists( "tagcontext" ) ) {
 			variables.tagcontext =  variables.ExtendedInfo.tagcontext;
@@ -75,6 +81,8 @@ component accessors="true" {
 		else {
 			variables.tagcontext =  arguments.e.TagContext;
 		}
+
+
 		
 		switch ( type ) {
 			case  "badrequest": case "validation":

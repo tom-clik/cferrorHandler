@@ -69,10 +69,20 @@ component accessors="true" {
 		variables.ExtendedInfo = deserializeJSON(arguments.e.ExtendedInfo);
 		variables.type =arguments.e.type;
 		
+
 		// when using the handler as a logger, sometimes we just want to supply this
 		if ( StructKeyExists( arguments, "ExtendedInfo" ) ) {
 			variables.ExtendedInfo = arguments.ExtendedInfo;
 		}
+		// You can catch nested errors by adding ExtendedInfo to ExtendedInfo
+		else if ( isStruct( variables.ExtendedInfo ) AND variables.ExtendedInfo.keyExists( "ExtendedInfo" ) ) {
+			local.ExtendedInfoSub = deserializeJSON(variables.ExtendedInfo.ExtendedInfo);
+			if (IsStruct(local.ExtendedInfoSub)) {
+				StructAppend(variables.ExtendedInfo,local.ExtendedInfoSub);
+				StructDelete(variables.ExtendedInfo,"ExtendedInfo");
+			}
+		}
+		
 		// supply original tag context in extended info if you have caught and rethrown an error
 		if ( isStruct( variables.ExtendedInfo ) AND variables.ExtendedInfo.keyExists( "tagcontext" ) ) {
 			variables.tagcontext =  variables.ExtendedInfo.tagcontext;
@@ -126,24 +136,18 @@ component accessors="true" {
 				"statuscode": variables.statuscode,
 				"message" : arguments.debug ? variables.message : variables.usermessage
 			}
-			
-			// note we don't set a status for reported errors
-			// typically we want the client side app to display a friendly
-			// message for these.
+
+			if ( NOT local.IsCommitted  ) {
+				cfheader( statuscode=variables.statuscode, statustext=variables.statustext );
+				cfheader( name="errorText", value=variables.statustext );
+				content type="application/json; charset=utf-8";
+			}
+
 			if (report) {
 				local.error["id"] = variables.id;
 				logError(getError());
 			}
-			else {
-				if ( NOT local.IsCommitted  ) {
-					cfheader( statuscode=variables.statuscode, statustext=variables.statustext );
-					cfheader( name="errorText", value=variables.statustext );
-				
-				}
-			}
-			if ( NOT local.IsCommitted  ) {
-				content type="application/json; charset=utf-8";
-			}
+			
 			WriteOutput(serializeJSON(local.error));
 
 		}

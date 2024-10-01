@@ -71,7 +71,7 @@ onError(e) {
 	param request.prc = {};
 
 	local.args = {
-		e=e,
+		e=arguments.e,
 		debug=request.prc.debug ? : 0,
 		isAjaxRequest=request.prc.isAjaxRequest ? : 0,
 		pageTemplate=application.errorTemplate ? : "",

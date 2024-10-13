@@ -74,16 +74,12 @@ component accessors="true" {
 		if ( StructKeyExists( arguments, "ExtendedInfo" ) ) {
 			variables.ExtendedInfo = arguments.ExtendedInfo;
 		}
-		// You can catch nested errors by adding ExtendedInfo to ExtendedInfo
-		else if ( isStruct( variables.ExtendedInfo ) AND variables.ExtendedInfo.keyExists( "ExtendedInfo" ) ) {
-			local.ExtendedInfoSub = deserializeJSON(variables.ExtendedInfo.ExtendedInfo);
-			if (IsStruct(local.ExtendedInfoSub)) {
-				StructAppend(variables.ExtendedInfo,local.ExtendedInfoSub);
-				StructDelete(variables.ExtendedInfo,"ExtendedInfo");
-			}
+		// You can catch nested errors by adding error to ExtendedInfo
+		else if ( isStruct( variables.ExtendedInfo ) ) {
+			getRecursiveInfo( variables.ExtendedInfo );
 		}
 		
-		// supply original tag context in extended info if you have caught and rethrown an error
+		//supply original tag context in extended info if you have caught and rethrown an error
 		if ( isStruct( variables.ExtendedInfo ) AND variables.ExtendedInfo.keyExists( "tagcontext" ) ) {
 			variables.tagcontext =  variables.ExtendedInfo.tagcontext;
 			StructDelete(variables.ExtendedInfo,"tagcontext");
@@ -187,6 +183,26 @@ component accessors="true" {
 				
 			}
 			
+		}
+
+	}
+
+	private void function getRecursiveInfo( required struct ExtendedInfo ) {
+
+		if ( arguments.ExtendedInfo.keyExists( "error" ) ) {
+
+			arguments.ExtendedInfo.tagcontext = arguments.ExtendedInfo.error.tagcontext;
+
+			if ( arguments.ExtendedInfo.error.keyExists("ExtendedInfo") ) {
+				local.info = deserializeJSON(arguments.ExtendedInfo.error.ExtendedInfo);
+				if ( isStruct(local.info) ) {
+					getRecursiveInfo(local.info);
+					StructAppend(arguments.ExtendedInfo, local.info, true);
+				}
+			}
+
+
+			StructDelete( arguments.ExtendedInfo, "error");
 		}
 
 	}

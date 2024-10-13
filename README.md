@@ -32,14 +32,14 @@ throw(
 
 ## Preserving the original tag context
 
-When throwing an error from inside a catch block, you can preserve the original tag content by adding it to the extended info. The error handler will replace the tagcontent of the throw error with this info
+When throwing an error from inside a catch block, you can preserve the original tag context by adding the error to the extended info. The error handler will replace the tagcontext of the thrown error with this info. It will also append any other data so the eventual error contains call extendedinfo from nested errors.
 
 ```cfscript
 try {
 
 }
 catch (any e) {
-	local.extendedinfo = {"tagcontext"=e.tagcontext};
+	local.extendedinfo = {"error"=e};
 	throw(
 		extendedinfo = SerializeJSON(local.extendedinfo),
 		message      = "Unable to do something:" & e.message, 

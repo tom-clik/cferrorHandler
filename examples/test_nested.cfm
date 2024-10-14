@@ -1,3 +1,10 @@
+<!---
+
+# Test nested errors
+
+The tag context should be the tag comtext of the first error. ExtendedInfo should combine all the data from the different errors
+
+--->
 <cfscript>
 request.prc.debug = 1;
 

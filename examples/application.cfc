@@ -22,7 +22,7 @@ component {
 
 	function onRequestStart(string targetPage) {
 		
-		// just while we're playing around...
+		// Don't do this in production!!
 		onApplicationStart()
 
 		request.prc = {debug=0,isAjaxRequest=0};

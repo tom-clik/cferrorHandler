@@ -9,7 +9,7 @@ try{
 	glibberty = nohow;// will cause error.
 }
 catch (any e) {
-	local.extendedinfo = {"tagcontext"=e.tagcontext,"data"=data};
+	local.extendedinfo = {"error"=e,"data"=data};
 	throw(
 		extendedinfo = SerializeJSON(local.extendedinfo),
 		message      = "Error:" & e.message, 

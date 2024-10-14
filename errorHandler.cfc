@@ -23,39 +23,39 @@ See the supplied text logger (textLogger.cfc) example.
  */ 
 component accessors="true" {
 
-	property name="usermessage" type="string";
-	property name="message" type="string";
-	property name="detail" type="string";
-	property name="code" type="string";
-	property name="ExtendedInfo";
-	property name="type" type="string";
-	property name="tagcontext";	
-	property name="statuscode" type="integer" default=500 type="string";
-	property name="statustext" type="string" default="Error";
-	property name="report" type="boolean" default=true;
-	property name="id" type="uuid" default="#createUUID()#";
+	property name="usermessage" type="string"; // message shown to users in friendly error page
+	property name="message" type="string"; // actual error message as thrown
+	property name="detail" type="string"; // detail from error
+	property name="code" type="string"; // error code if supplied in throw
+	property name="ExtendedInfo"; // See notes, used extensively for debug information, usually as JSON encoded struct
+	property name="type" type="string"; // Error type. badrequest|validation|forbidden|Unauthorized|missinginclude|notfound|notfounddetail|not found|custom note some types will not trigger the logger (if used)
+	property name="tagcontext" type="array"; // tag context array
+	property name="statuscode" type="integer" default=500; // numeric http code. Will be set as a header
+	property name="statustext" type="string" default="Error"; // http statuc. Will be set as a header
+	property name="report" type="boolean" default=true; // Use logger component (qv) to log error.
+	property name="id" type="uuid" default="#createUUID()#"; // Unique ID for logging. Can be supplied to users in error page to aid support.
 
 	/**
 	 * Initialise error
 	 * 
-	 * @e       CFML exception
-	 * @isAjaxRequest  boolean     Return JSON formatted version
+	 * @e              CFML exception
+	 * @isAjaxRequest  Return JSON formatted version
 	 * @pageTemplate   Page template for error display. The fields "usermessage","code","statustext","id" should be enclosed in double braces {{}} (mustache style)
-	 * @debug        Dump the error instead of displaying error page
-	 * @logger       Custom logging component. See loggerInterface and the textLogger example
-	 * @message      Error to display to user. Note that if the "type" of the exception is "custom", the exception error message will be shown.
-	 * @ExtendedInfo  Manually supply extended info when using as a logger
-	 * @abort        Abort and show error page (or dump if debug)
+	 * @debug          Dump the error instead of displaying error page
+	 * @logger         Custom logging component. See loggerInterface and the textLogger example
+	 * @message        Error to display to user. Note that if the "type" of the exception is "custom", the exception error message will be shown.
+	 * @ExtendedInfo   Manually supply extended info when using as a logger
+	 * @abort          Abort and show error page (or dump if debug)
 	 */
 	public void function init(
 		required any      e, 
 		         boolean  isAjaxRequest=0,  
-		         string pageTemplate="", 
-		         boolean debug=0, 
-		         any logger,
-		         string message = "Sorry, an error has occurred",
-		         struct ExtendedInfo,
-		         boolean abort=1
+		         string   pageTemplate="", 
+		         boolean  debug=0, 
+		         any      logger,
+		         string   message = "Sorry, an error has occurred",
+		         struct   ExtendedInfo,
+		         boolean  abort=1
 		) {
 
 		if ( arguments.keyExists("logger") ) {

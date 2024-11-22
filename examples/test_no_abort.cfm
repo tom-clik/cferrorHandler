@@ -8,13 +8,14 @@ try{
 	glibberty = nohow;// will cause error.
 }
 catch (any e) {
-	local.extendedinfo = {"error"=e,"data"=data};
+	local.extendedinfo = {"data"=data};
 	
 	local.args = {
 		e=e,
 		isAjaxRequest=0,
 		logger= application.errorLogger ? : new textLogger( ExpandPath( "/logs/errors" ) ),
-		abort=0
+		abort=0,
+		extendedinfo = local.extendedinfo
 	};
 
 	error = new errorHandler(argumentCollection=local.args);

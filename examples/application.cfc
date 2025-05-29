@@ -28,16 +28,25 @@ component {
 		request.prc = {debug=0,isAjaxRequest=0};
 	}
 
+	// if you actually want to log missing pages, use this method.
+	/*
+	function onMissingTemplate(targetPage) {
+		writeOutput("page not found");
+		abort;
+	}
+	*/
+	
+
 	function onError(e) {
 
 		param request.prc = {};
 
 		local.args = {
-			e=e,
+			error=arguments.e,
 			debug=request.prc.debug ? : 0,
 			isAjaxRequest=request.prc.isAjaxRequest ? : 0,
 			pageTemplate=application.errorTemplate ? : "",
-			logger= application.errorLogger ? : new textLogger( ExpandPath( "/logs/errors" ) )
+			logger= application.errorLogger ? : new cflogLogger( )
 		};
 
 		new errorHandler(argumentCollection=local.args);

@@ -38,7 +38,7 @@ component accessors="true" {
 	/**
 	 * Initialise error
 	 * 
-	 * @e              CFML exception
+	 * @error          CFML exception
 	 * @isAjaxRequest  Return JSON formatted version
 	 * @pageTemplate   Page template for error display. The fields "usermessage","code","statustext","id" should be enclosed in double braces {{}} (mustache style)
 	 * @debug          Dump the error instead of displaying error page
@@ -48,7 +48,7 @@ component accessors="true" {
 	 * @abort          Abort and show error page (or dump if debug)
 	 */
 	public void function init(
-		required any      e, 
+		         any      error = {}, 
 		         boolean  isAjaxRequest=0,  
 		         string   pageTemplate="", 
 		         boolean  debug=0, 
@@ -62,12 +62,20 @@ component accessors="true" {
 			variables.logger = arguments.logger;
 		}
 
+		// legacy 'e' alias for error
+		if ( arguments.keyExists("e") ) {
+			StructAppend(arguments.error, arguments.e, true);
+		}
+
+		// it's fine to supply your own struct as an error, here we check the required fields
+		StructAppend(arguments.error, {"message"="Message not specified","detail"="","errorcode"="","ExtendedInfo"="","type"="error","TagContext"=[]}, false);
+
 		variables.usermessage = arguments.message;
-		variables.message =arguments.e.message;
-		variables.detail =arguments.e.detail;
-		variables.code =arguments.e.errorcode;
-		variables.ExtendedInfo = deserializeJSON(arguments.e.ExtendedInfo);
-		variables.type =arguments.e.type;
+		variables.message =arguments.error.message;
+		variables.detail =arguments.error.detail;
+		variables.code =arguments.error.errorcode;
+		variables.ExtendedInfo = deserializeJSON(arguments.error.ExtendedInfo);
+		variables.type =arguments.error.type;
 		
 
 		// when using the handler as a logger, sometimes we just want to supply this
@@ -85,7 +93,7 @@ component accessors="true" {
 			StructDelete(variables.ExtendedInfo,"tagcontext");
 		}
 		else {
-			variables.tagcontext =  arguments.e.TagContext;
+			variables.tagcontext =  arguments.error.TagContext;
 		}
 
 
@@ -121,6 +129,8 @@ component accessors="true" {
 				// custom errors show thrown message
 				variables.usermessage  = variables.message;
 				break;
+			
+
 		}
 		// check if we've already start writing page.
 		local.IsCommitted = GetPageContext().GetResponse().IsCommitted();

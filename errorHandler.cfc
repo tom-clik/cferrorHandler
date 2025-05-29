@@ -48,7 +48,7 @@ component accessors="true" {
 	 * @abort          Abort and show error page (or dump if debug)
 	 */
 	public void function init(
-		         any      error, 
+		         any      error = {}, 
 		         boolean  isAjaxRequest=0,  
 		         string   pageTemplate="", 
 		         boolean  debug=0, 
@@ -62,8 +62,9 @@ component accessors="true" {
 			variables.logger = arguments.logger;
 		}
 
-		if (! arguments.keyExists("error") && arguments.keyExists("e") ) {
-			arguments.error = arguments.e;
+		// legacy 'e' alias for error
+		if ( arguments.keyExists("e") ) {
+			StructAppend(arguments.error, arguments.e, true);
 		}
 
 		// it's fine to supply your own struct as an error, here we check the required fields

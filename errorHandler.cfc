@@ -240,4 +240,20 @@ component accessors="true" {
 			"tagcontext"=variables.tagcontext
 		}
 	}
+
+	/**
+	 * Generate a runnable SQL script to add to error dump
+	 * 
+	 * @SQL    sql query
+	 * @params struct of query parameters
+	 */
+	private string function debugSQL(required string SQL, required struct params) localmode=true {
+
+		ret = "";
+
+		for (param in arguments.params)
+
+		return ret;
+
+	} 
 }

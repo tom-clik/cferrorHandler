@@ -265,8 +265,16 @@ component accessors="true" {
 		for (param in arguments.params) {
 			paramvals = arguments.params[param];
 			type = debugSQLType( paramvals );
-			val = ( paramvals.null ? : false ) ? "" : " = " & debugSQLValue(paramvals.value, type);
-			ret &= "DECLARE @#param# #type# #val# ;" & newLine();
+			list = ( paramvals.list ? : false );
+			val = debugSQLValue(val=paramvals.value, sqltype=type, list=list);
+			// no simple way to handle list values so we just inline them
+			if (! list) {
+				val_str = ( paramvals.null ? : false ) ? "" : " = " & val;
+				ret &= "DECLARE @#param# #type# #val_str# ;" & newLine();
+			}
+			else {
+				arguments.SQL = Replace(arguments.SQL,":#param#",val,"all");
+			}
 		}
 
 		ret &= Replace(arguments.SQL,":","@","all") & newLine();
@@ -279,21 +287,27 @@ component accessors="true" {
 		
 		type = ( arguments.param.type ? : ( arguments.param.cfsqltype ? : "text")  );
 		switch (type) {
-			case "integer": case "cf_sql_integer":
+			case "integer": case "cf_sql_integer": case "int": case "cf_sql_int": 
 				return "INT";
 			case "boolean": case "bit": case "cf_sql_bit": case "cf_sql_boolean": 
 				return "BIT";
-			case "cf_sql_date": case "cf_sql_datetime":  case "cf_sql_date":
+			case "cf_sql_date": case "date":  
 				return "DATE";
+			case "cf_sql_datetime":  case "datetime":
+				return "DATETIME";
 			default:
 				return "VARCHAR(max)";
 		}
 	}
 
-	private string function debugSQLValue(required any val, required string sqltype) localmode=true {
+	private string function debugSQLValue(required any val, required string sqltype, boolean list=false) localmode=true {
+		if ( isArray(arguments.val) ) {
+			arguments.val = arguments.val.toList();
+		}
+
 		switch (arguments.sqltype) {
 			case "INT":
-				return arguments.val;
+				return arguments.val;	
 			case "BIT":
 				return arguments.val ? "1" : "0" ;
 			case "DATE":
@@ -304,8 +318,22 @@ component accessors="true" {
 					dateVal = arguments.val;
 				}
 				return dateVal;
+			case "DATETIME":
+				try {
+					dateVal = CreateODBCDateTime(arguments.val);
+				}
+				catch (any e) {
+					dateVal = arguments.val;
+				}
+				return dateVal;
 			default:
-				return "'#arguments.val#'";
+				if (arguments.list) {
+					return listQualify(arguments.val, "'") ;
+				}
+				else {
+					return "'#arguments.val#'";
+				}
+				
 		}
 
 	}

@@ -34,6 +34,7 @@ component accessors="true" {
 	property name="statustext" type="string" default="Error"; // http statuc. Will be set as a header
 	property name="report" type="boolean" default=true; // Use logger component (qv) to log error.
 	property name="id" type="uuid" default="#createUUID()#"; // Unique ID for logging. Can be supplied to users in error page to aid support.
+	property name="debugsql" type="string" default=""; // runnable SQL if params and sql are provided in extended info
 
 	/**
 	 * Initialise error
@@ -94,6 +95,15 @@ component accessors="true" {
 		}
 		else {
 			variables.tagcontext =  arguments.error.TagContext;
+		}
+
+		if ( isStruct( variables.ExtendedInfo ) 
+			AND variables.ExtendedInfo.keyExists( "sql" ) 
+			AND variables.ExtendedInfo.keyExists( "params" )
+			) {
+
+			variables.debugsql = debugSQLQuery(sql=variables.ExtendedInfo.sql,params=variables.ExtendedInfo.params);
+
 		}
 
 
@@ -226,7 +236,7 @@ component accessors="true" {
 	/** return error as simple struct */
 	public struct function getError() {
 
-		return {
+		return [
 			"usermessage"=variables.usermessage,
 			"message"=variables.message,
 			"detail"=variables.detail,
@@ -237,7 +247,68 @@ component accessors="true" {
 			"statustext"=variables.statustext,
 			"report"=variables.report,
 			"id"=variables.id,
-			"tagcontext"=variables.tagcontext
+			"tagcontext"=variables.tagcontext,
+			"debugsql"=variables.debugsql
+		]
+	}
+
+	/**
+	 * Generate a runnable SQL script to add to error dump
+	 * 
+	 * @SQL    sql query
+	 * @params struct of query parameters
+	 */
+	private string function debugSQLQuery(required string SQL, required struct params) localmode=true {
+		
+		ret = "";
+
+		for (param in arguments.params) {
+			paramvals = arguments.params[param];
+			type = debugSQLType( paramvals );
+			val = ( paramvals.null ? : false ) ? "" : " = " & debugSQLValue(paramvals.value, type);
+			ret &= "DECLARE @#param# #type# #val# ;" & newLine();
+		}
+
+		ret &= Replace(arguments.SQL,":","@","all") & newLine();
+
+		return ret;
+
+	} 
+
+	private string function debugSQLType(required struct param) localmode=true {
+		
+		type = ( arguments.param.type ? : ( arguments.param.cfsqltype ? : "text")  );
+		switch (type) {
+			case "integer": case "cf_sql_integer":
+				return "INT";
+			case "boolean": case "bit": case "cf_sql_bit": case "cf_sql_boolean": 
+				return "BIT";
+			case "cf_sql_date": case "cf_sql_datetime":  case "cf_sql_date":
+				return "DATE";
+			default:
+				return "VARCHAR(max)";
 		}
 	}
+
+	private string function debugSQLValue(required any val, required string sqltype) localmode=true {
+		switch (arguments.sqltype) {
+			case "INT":
+				return arguments.val;
+			case "BIT":
+				return arguments.val ? "1" : "0" ;
+			case "DATE":
+				try {
+					dateVal = CreateODBCDate(arguments.val);
+				}
+				catch (any e) {
+					dateVal = arguments.val;
+				}
+				return dateVal;
+			default:
+				return "'#arguments.val#'";
+		}
+
+	}
+	
+
 }

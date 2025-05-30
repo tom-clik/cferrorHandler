@@ -4,7 +4,7 @@ Simple component for handling errors in in CFML apps
 
 ## Background
 
-The error handler is a "proper" component that is instantiated when an error occurs, e.g.
+The error handler is a component that is instantiated when an error occurs, e.g.
 
 ```cfscript
 onError(e) {
@@ -12,9 +12,9 @@ onError(e) {
 }
 ```
 
-This is to ensure it can be used in any context and to catch errors on application start up.
+It normally terminates after doing its thing (see following), but it can be set to return the error object and continue.
 
-To actually log errors, you will need to pass in a logging component. 
+To log errors, you will need to pass in a logging component. 
 
 ```cfscript
 onError(e) {
@@ -26,21 +26,20 @@ This might well be a singleton pattern component that you have initialised in th
 
 ## Extended Info
 
-The component allows the ExtendedInfo for an error to contain debug information. When throwing an error, serialise the data you want to debug and the errorHandler will deserialize it.
+The component allows the `ExtendedInfo` for an error to contain debug information. When throwing an error, serialise the data you want to debug and the errorHandler will deserialize it.
 
 ```cfscript
 local.extendedinfo = {"data"=data};
 throw(
 	extendedinfo = SerializeJSON(local.extendedinfo),
 	message      = "Unable to do something:" & e.message, 
-	detail       = e.detail,
-	errorcode    = "test1"		
+	detail       = e.detail	
 );
 ```
 
 ## Preserving the original tag context
 
-When throwing an error from inside a catch block, you can preserve the original tag context by adding the error to the extended info. The error handler will replace the tagcontext of the thrown error with this info. It will also append any other data so the eventual error contains all extendedinfo from nested errors.
+When throwing an error from inside a catch block, you can preserve the original error and tag context by adding the error to the extended info. The error handler will replace the tagcontext of the thrown error with this info. It will also append any other data so the eventual error contains all extended info from nested catch blocks.
 
 ```cfscript
 try {
@@ -51,8 +50,7 @@ catch (any e) {
 	throw(
 		extendedinfo = SerializeJSON(local.extendedinfo),
 		message      = "Unable to do something:" & e.message, 
-		detail       = e.detail,
-		errorcode    = "test2"		
+		detail       = e.detail	
 	);
 }
 ```
@@ -60,7 +58,6 @@ catch (any e) {
 ## Logging Errors
 
 To log errors, you need to supply a component that implements the loggerInterface. See for example the textLogger.
-
 
 ```cfscript
 onError(e) {
@@ -96,18 +93,36 @@ Sometimes you want to log a caught error but continue operations. This can be do
 
 ## Ignoring "hack" type errors
 
-A "type" can be supplied to indicate the error should not be logged. This avoids your logs being flooded with invalid requests from hacker traffic. The types of "badrequest","validation", and "Unauthorized" will return a releavnt 4xx status code and not call the logger.
+A "type" can be supplied to indicate the error should not be logged. This avoids your logs being flooded with invalid requests from hacker traffic. The types of **"badrequest"**,**"validation"**, **"forbidden"**, and **"unauthorized"** will return the relevant `4xx` status code and not call the logger.
 
-Page not found errors will return a 410 and not log. The simplest way to change this is to use an onMissingTemplate method in your application. See the commented out example in `application.cfc`
+Page not found errors will return a 410 and not log. The simplest way to change this is to use an `onMissingTemplate` method in your application. See the commented out example in `application.cfc`
+
+## Custom errors
+
+The default user message is "Sorry an error has occurred". This can be changed in two ways: either by supplying a different value on initiation, or by setting the error type to `custom`, which will show the thrown error message to the user.
+
+### Global change
+
+```cfscript
+onError(e) {
+	new cferrorHandler.errorHandler(error=e, message="Lo sentimos, se ha producido un error.");
+}
+```
+
+### Custom type
+
+```
+throw(message="Custom message for user",detail="This won't be shown",type="custom");
+```
 
 ## SQL Errors
 
-Error handler works well with queries run using `queryExecute`. When keys "sql" and "params" are added to the extendedinfo, an extra field debugsql is added to the error dump. This should be runnable in a query editor.
+Error handler works well with queries run using `queryExecute`. When keys `sql` and `params` are added to the extendedinfo, an extra field `debugsql` is added to the error dump. This should be runnable in a query editor. See the sample `test_sql` for details.
 
 E.g.
 
 ```cfml
-try{
+try {
 	vals = queryExecute( sql, params );
 }
 catch (any e) {

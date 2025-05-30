@@ -139,11 +139,9 @@ catch (any e) {
 
 An html template to display to the end user can be specified in the argument `pageTemplate`. It uses mustache like syntax ( i.e. `{{fieldname}}` ), with the following fields:
 
-usermessage
-: Public error message
-code
-: error code from a cfthrow
-statustext
-: http status text
-id
-: error UUID - can be made public and used to diagnose the error from your logs
+| field       | description
+|-------------|----------------------------------
+| usermessage | Public error message
+| code        | error code from a cfthrow
+| statustext  | http status text
+| id          | error UUID - can be made public and used to diagnose the error from your logs

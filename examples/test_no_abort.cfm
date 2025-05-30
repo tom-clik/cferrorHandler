@@ -1,7 +1,11 @@
 <cfscript>
-// the handler can be used as a general logger with abort=0
-// the advantage of doing this over passing straight to your
-// logger is that it will get the tag context and the extendedinfo
+/*
+
+the handler can be used as a general logger with abort=0
+
+here you can create your own error as a struct, or you might be using a caught error in a loop
+
+*/ 
 
 // creating our own error absolutely fine. 
 e = {
@@ -10,10 +14,11 @@ e = {
 
 local.extendedinfo = {"data"="Sample data"};
 
+logger = new textLogger( ExpandPath( "/logs/errors" ) );
+
 local.args = {
 	error=e,
-	isAjaxRequest=0,
-	logger= application.errorLogger ? : new textLogger( ExpandPath( "/logs/errors" ) ),
+	logger= logger,
 	abort=0,
 	extendedinfo = local.extendedinfo
 };

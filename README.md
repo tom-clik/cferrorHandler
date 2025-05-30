@@ -8,13 +8,21 @@ The error handler is a "proper" component that is instantiated when an error occ
 
 ```cfscript
 onError(e) {
-	new cferrorHandler.errorHandler(e=e,isAjaxRequest=request.isAjaxRequest);
+	new cferrorHandler.errorHandler(error=e);
 }
 ```
 
 This is to ensure it can be used in any context and to catch errors on application start up.
 
-To actually log errors, you will need to pass in a logging component. This might well be a singleton pattern component that you have initialised in the application scope, but you will need to ensure your logic copes with it not being defined. See the examples following.
+To actually log errors, you will need to pass in a logging component. 
+
+```cfscript
+onError(e) {
+	new cferrorHandler.errorHandler(error=e, logger = application.errorLogger ? : new cferrorHandler.cflogLogger() );
+}
+```
+
+This might well be a singleton pattern component that you have initialised in the application scope, but you will need to ensure your logic copes with it not being defined. In the above example, a fallback logger to write to the cflog is used.
 
 ## Extended Info
 
@@ -56,13 +64,13 @@ To log errors, you need to supply a component that implements the loggerInterfac
 
 ```cfscript
 onError(e) {
-	new cferrorHandler.errorHandler(e=e,logger=new cferrorHandler.textLogger(ExpandPath("/logs/_errors") ) );
+	new cferrorHandler.errorHandler(error=e,logger=new cferrorHandler.textLogger(ExpandPath("/logs/_errors") ) );
 }
 ```
 
 ## Returning JSON
 
-The `isAjaxRequest` argument will return JSON.
+The `ajax` argument will return JSON. You can set a request variable in your APIs to ensure this is set to true, see sample code following.
 
 ## Sample Code
 
@@ -71,9 +79,9 @@ onError(e) {
 	param request.prc = {};
 
 	local.args = {
-		e=arguments.e,
+		error=arguments.e,
 		debug=request.prc.debug ? : 0,
-		isAjaxRequest=request.prc.isAjaxRequest ? : 0,
+		ajax=request.prc.isAjaxRequest ? : 0,
 		pageTemplate=application.errorTemplate ? : "",
 		logger= application.errorLogger ? : new textLogger( ExpandPath("/logs/_errors") )
 	};
@@ -81,3 +89,9 @@ onError(e) {
 	new errorHandler(argumentCollection=local.args);
 }
 ```
+
+## Usage
+
+| Argument  | Type      | Description
+|-----------|-----------|-------------------------
+| 

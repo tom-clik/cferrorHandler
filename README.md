@@ -90,8 +90,45 @@ onError(e) {
 }
 ```
 
-## Usage
+## Logging without aborting
 
-| Argument  | Type      | Description
-|-----------|-----------|-------------------------
-| 
+Sometimes you want to log a caught error but continue operations. This can be done by supplying the `abort=false` argument. See the `test_no_abort` sample script for more information.
+
+## Ignoring "hack" type errors
+
+A "type" can be supplied to indicate the error should not be logged. This avoids your logs being flooded with invalid requests from hacker traffic. The types of "badrequest","validation", and "Unauthorized" will return a releavnt 4xx status code and not call the logger.
+
+Page not found errors will return a 410 and not log. The simplest way to change this is to use an onMissingTemplate method in your application. See the commented out example in `application.cfc`
+
+## SQL Errors
+
+Error handler works well with queries run using `queryExecute`. When keys "sql" and "params" are added to the extendedinfo, an extra field debugsql is added to the error dump. This should be runnable in a query editor.
+
+E.g.
+
+```cfml
+try{
+	vals = queryExecute( sql, params );
+}
+catch (any e) {
+
+	local.extendedinfo = {"error"=e,"sql"=sql,"params"=params};
+	throw(
+		extendedinfo = SerializeJSON(local.extendedinfo),
+		message      = "Error:" & e.message, 
+		detail       = e.detail	
+	);
+```
+
+## Error Templates
+
+An html template to display to the end user can be specified in the argument `pageTemplate`. It uses mustache like syntax ( i.e. `{{fieldname}}` ), with the following fields:
+
+usermessage
+: Public error message
+code
+: error code from a cfthrow
+statustext
+: http status text
+id
+: error UUID - can be made public and used to diagnose the error from your logs

@@ -39,17 +39,17 @@ component accessors="true" {
 	 * Initialise error
 	 * 
 	 * @error          CFML exception
-	 * @isAjaxRequest  Return JSON formatted version
+	 * @ajax           Return JSON formatted version
 	 * @pageTemplate   Page template for error display. The fields "usermessage","code","statustext","id" should be enclosed in double braces {{}} (mustache style)
 	 * @debug          Dump the error instead of displaying error page
 	 * @logger         Custom logging component. See loggerInterface and the textLogger example
 	 * @message        Error to display to user. Note that if the "type" of the exception is "custom", the exception error message will be shown.
-	 * @ExtendedInfo   Manually supply extended info when using as a logger
+	 * @ExtendedInfo   DEPRECATED Manually supply extended info when using as a logger.
 	 * @abort          Abort and show error page (or dump if debug)
 	 */
 	public void function init(
 		         any      error = {}, 
-		         boolean  isAjaxRequest=0,  
+		         boolean  ajax=0,  
 		         string   pageTemplate="", 
 		         boolean  debug=0, 
 		         any      logger,
@@ -121,9 +121,9 @@ component accessors="true" {
 				variables.report = 0;
 				break;
 			case "ajaxerror":
-				// avoid throwing ajaxerror. better to set isAjaxRequest
+				// avoid throwing ajaxerror. better to set ajax
 				// and throw normal error
-				arguments.isAjaxRequest = 1;
+				arguments.ajax = 1;
 				break;
 			case  "custom":
 				// custom errors show thrown message
@@ -135,7 +135,7 @@ component accessors="true" {
 		// check if we've already start writing page.
 		local.IsCommitted = GetPageContext().GetResponse().IsCommitted();
 
-		if (arguments.isAjaxRequest) {
+		if (arguments.ajax) {
 
 			local.error = {
 				"statustext": variables.statustext,

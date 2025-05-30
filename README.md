@@ -96,13 +96,31 @@ Sometimes you want to log a caught error but continue operations. This can be do
 
 ## Ignoring "hack" type errors
 
-A "type" can be supplied to indicate the error should not be logged. This avoids your logs being flooded with invalid requests from hacker traffic. The types of "badrequest","validation", and "Unauthorized" will return a releavnt 4xx status code and not call the logger.
+A "type" can be supplied to indicate the error should not be logged. This avoids your logs being flooded with invalid requests from hacker traffic. The types of "badrequest","validation", and "Unauthorized" will return a relevant 4xx status code and not call the logger.
 
-Page not found errors will return a 410 and not log. The simplest way to change this is to use an onMissingTemplate method in your application. See the commented out example in `application.cfc`
+Page not found errors will return a 410 and not log. The simplest way to change this is to use an `onMissingTemplate` method in your application. See the commented out example in `application.cfc`
+
+## Custom errors
+
+The default user message is "Sorry an error has occurred". This can be changed in two ways: either by supplying a different value on initiation, or by setting the error type to `custom`, which will show the thrown error message to the user.
+
+### Global change
+
+```cfscript
+onError(e) {
+	new cferrorHandler.errorHandler(error=e, message="Lo sentimos, se ha producido un error.");
+}
+```
+
+### Custom type
+
+```
+throw(message="Custom message for user",detail="This won't be shown",type="custom");
+```
 
 ## SQL Errors
 
-Error handler works well with queries run using `queryExecute`. When keys "sql" and "params" are added to the extendedinfo, an extra field debugsql is added to the error dump. This should be runnable in a query editor.
+Error handler works well with queries run using `queryExecute`. When keys "sql" and "params" are added to the extendedinfo, an extra field debugsql is added to the error dump. This should be runnable in a query editor. See the sample `test_sql` for example.
 
 E.g.
 

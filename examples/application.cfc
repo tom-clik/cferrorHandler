@@ -42,11 +42,11 @@ component {
 		param request.prc = {};
 
 		local.args = {
-			error=arguments.e,
-			debug=request.prc.debug ? : 0,
-			isAjaxRequest=request.prc.isAjaxRequest ? : 0,
-			pageTemplate=application.errorTemplate ? : "",
-			logger= application.errorLogger ? : new cflogLogger( )
+			error        = arguments.e,
+			debug        = request.prc.debug ? : 0,
+			ajax         = request.prc.isAjaxRequest ? : 0,
+			pageTemplate = application.errorTemplate ? : "",
+			logger       = application.errorLogger   ? : new cflogLogger( )
 		};
 
 		new errorHandler(argumentCollection=local.args);

@@ -23,7 +23,7 @@ sql = "
 	AND    articles_types_id in ( :types ) 
 	AND    articles_types_id not in ( :types2 ) 
 ";
-// method should cope with using cfsqltype or type for the atteibute name and the optional cf_sql_ prefix on the value
+// method should cope with using `cfsqltype` or `type` for the attribute name and the optional `cf_sql_` prefix on the value
 params = {
 	"live":{value=true, cfsqltype="cf_sql_boolean"},
 	"pubdate":{value=DateAdd("d", -7,  now()) , type="datetime"},

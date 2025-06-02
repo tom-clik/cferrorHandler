@@ -6,12 +6,13 @@ When keys "sql" and "params" are added to the extendedinfo, an extra field debug
 
 This should be runnable in a query editor.
 
-In this test script we extra the script to display it. In a normal thrown error, it would be a key of the dumped error.
+In this test script we extract the script to display it. In a normal thrown error, it would be a key of the dumped error.
 
 */
 
 request.prc.debug = 1;
 
+/** This query isn't mean to run! It shuold just throw error */
 sql = "
 	SELECT *
 	FROM   articles
@@ -22,6 +23,7 @@ sql = "
 	AND    articles_types_id in ( :types ) 
 	AND    articles_types_id not in ( :types2 ) 
 ";
+// method should cope with using cfsqltype or type for the atteibute name and the optional cf_sql_ prefix on the value
 params = {
 	"live":{value=true, cfsqltype="cf_sql_boolean"},
 	"pubdate":{value=DateAdd("d", -7,  now()) , type="datetime"},
@@ -55,6 +57,7 @@ catch (any e) {
 		extendedinfo = local.extendedinfo
 	};
 
+	// again, we want to demo the debug sql field so we don't abort and return the error
 	error = new errorHandler(argumentCollection=local.args).getError();
 	writeOutput("<pre>#htmlCodeFormat(error.debugsql)#</pre>");
 	

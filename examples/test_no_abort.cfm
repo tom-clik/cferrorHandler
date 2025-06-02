@@ -8,7 +8,7 @@ here you can create your own error as a struct, or you might be using a caught e
 */ 
 
 // creating our own error absolutely fine. 
-e = {
+error = {
 	"message": "Manual error"
 };
 
@@ -17,18 +17,18 @@ local.extendedinfo = {"data"="Sample data"};
 logger = new textLogger( ExpandPath( "/logs/errors" ) );
 
 local.args = {
-	error=e,
-	logger= logger,
-	abort=0,
+	error = error,
+	logger = logger,
+	abort = 0,
 	extendedinfo = local.extendedinfo
 };
 
-error = new errorHandler(argumentCollection=local.args);
-writeOutput(error.getID());
+for (i in [1,2,3]) {
+	error = new errorHandler(argumentCollection=local.args);
+	writeOutput(i & ":" & error.getID() & "<br>");
+}
 
 writeOutput("<p>Continuing after</p>");
-
-
 
 </cfscript>
 			

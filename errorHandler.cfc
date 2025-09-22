@@ -28,7 +28,7 @@ component accessors="true" {
 	property name="detail" type="string"; // detail from error
 	property name="code" type="string"; // error code if supplied in throw
 	property name="ExtendedInfo"; // See notes, used extensively for debug information, usually as JSON encoded struct
-	property name="type" type="string"; // Error type. badrequest|validation|forbidden|Unauthorized|missinginclude|notfound|notfounddetail|not found|custom note some types will not trigger the logger (if used)
+	property name="type" type="string"; // Error type: error|badrequest|validation|forbidden|Unauthorized|missinginclude|notfound|custom note some types will not trigger the logger (if used)
 	property name="tagcontext" type="array"; // tag context array
 	property name="statuscode" type="integer" default=500; // numeric http code. Will be set as a header
 	property name="statustext" type="string" default="Error"; // http statuc. Will be set as a header
@@ -101,8 +101,12 @@ component accessors="true" {
 			AND variables.ExtendedInfo.keyExists( "sql" ) 
 			AND variables.ExtendedInfo.keyExists( "params" )
 			) {
-
-			variables.debugsql = debugSQLQuery(sql=variables.ExtendedInfo.sql,params=variables.ExtendedInfo.params);
+			try {
+				variables.debugsql = debugSQLQuery(sql=variables.ExtendedInfo.sql,params=variables.ExtendedInfo.params);
+			}
+			catch (any debugsqle) {
+				variables.debugsql = "Unable to create debug query: #debugsqle.error#";
+			}
 
 		}
 

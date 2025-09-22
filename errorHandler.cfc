@@ -309,7 +309,7 @@ component accessors="true" {
 			case "INT":
 				return arguments.val;	
 			case "BIT":
-				return arguments.val ? "1" : "0" ;
+				return isBoolean( arguments.val ) && arguments.val ? "1" : "0" ;
 			case "DATE":
 				try {
 					dateVal = CreateODBCDate(arguments.val);

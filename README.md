@@ -99,9 +99,9 @@ Page not found errors will return a 410 and not log. The simplest way to change 
 
 ## Custom errors
 
-The default user message is "Sorry an error has occurred". This can be changed in two ways: either by supplying a different value on initiation, or by setting the error type to `custom`, which will show the thrown error message to the user.
+The default user message is "Sorry an error has occurred". This can be changed in two ways: either by supplying a different value when instantiating the object, or by setting the error type to `custom`, which will show the thrown error message to the user.
 
-### Global change
+### Changing default message
 
 ```cfscript
 onError(e) {

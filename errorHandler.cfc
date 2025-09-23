@@ -105,7 +105,7 @@ component accessors="true" {
 				variables.debugsql = debugSQLQuery(sql=variables.ExtendedInfo.sql,params=variables.ExtendedInfo.params);
 			}
 			catch (any debugsqle) {
-				variables.debugsql = "Unable to create debug query: #debugsqle.error#";
+				variables.debugsql = "Unable to create debug query: #debugsqle.message#";
 			}
 
 		}

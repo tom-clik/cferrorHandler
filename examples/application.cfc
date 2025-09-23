@@ -12,10 +12,7 @@ component {
 
 	function onApplicationStart() {
 		
-		// use the standard text logger -- just to illustrate
-		// instantiated object pattern. You would replace this 
-		// with something more sophisticated. 
-		
+		// use the standard text logger
 		application.errorLogger = new textLogger( folder=ExpandPath( "/logs/errors" ) );
 		application.errorTemplate = FileRead( ExpandPath( "./sampleTemplate.html" ) );
 	}

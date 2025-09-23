@@ -12,7 +12,7 @@ In this test script we extract the script to display it. In a normal thrown erro
 
 request.prc.debug = 1;
 
-/** This query isn't mean to run! It shuold just throw error */
+/** This query isn't meant to run! It should just throw error */
 sql = "
 	SELECT *
 	FROM   articles

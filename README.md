@@ -109,7 +109,7 @@ if ( validation.failed ) {
 
 The default user message is "Sorry an error has occurred". This can be changed in two ways: either by supplying a different value when instantiating the object, or by setting the error type to `custom`, which will show the thrown error message to the user.
 
-These are only displayed if the template (see [Error templates(#templates)]) is set to show them.
+These are only displayed if the template (see [Error templates](#error-templates)) is set to show them.
 
 ### Changing default message
 

@@ -6,7 +6,7 @@ Simple component for handling errors in in CFML apps
 
 The error handler is a component that is instantiated when an error occurs, e.g.
 
-```cfscript
+```javascript
 onError(e) {
 	new cferrorHandler.errorHandler(error=e);
 }
@@ -16,7 +16,7 @@ It normally terminates after doing its thing (see following), but it can be set 
 
 To log errors, you will need to pass in a logging component. 
 
-```cfscript
+```javascript
 onError(e) {
 	new cferrorHandler.errorHandler(error=e, logger = application.errorLogger ? : new cferrorHandler.cflogLogger() );
 }
@@ -26,9 +26,9 @@ This might well be a singleton pattern component that you have initialised in th
 
 ## Extended Info
 
-The component allows the `ExtendedInfo` for an error to contain debug information. When throwing an error, serialise the data you want to debug and the errorHandler will deserialize it.
+The component allows the `ExtendedInfo` for an error to contain debug information. When throwing an error, serialise the data you want to debug and the errorHandler will deserialize it. It will be shown in the dump when in debug mode, or you can use your logger to record it.
 
-```cfscript
+```javascript
 local.extendedinfo = {"data"=data};
 throw(
 	extendedinfo = SerializeJSON(local.extendedinfo),
@@ -41,7 +41,7 @@ throw(
 
 When throwing an error from inside a catch block, you can preserve the original error and tag context by adding the error to the extended info. The error handler will replace the tagcontext of the thrown error with this info. It will also append any other data so the eventual error contains all extended info from nested catch blocks.
 
-```cfscript
+```javascript
 try {
 
 }
@@ -55,11 +55,13 @@ catch (any e) {
 }
 ```
 
+Note that by using the message of the caught error like this, you will end up with a message that combines the message from all levels.
+
 ## Logging Errors
 
 To log errors, you need to supply a component that implements the loggerInterface. See for example the textLogger.
 
-```cfscript
+```javascript
 onError(e) {
 	new cferrorHandler.errorHandler(error=e,logger=new cferrorHandler.textLogger(ExpandPath("/logs/_errors") ) );
 }
@@ -71,7 +73,7 @@ The `ajax` argument will return JSON. You can set a request variable in your API
 
 ## Sample Code
 
-```cfscript
+```javascript
 onError(e) {
 	param request.prc = {};
 
@@ -97,13 +99,21 @@ A "type" can be supplied to indicate the error should not be logged. This avoids
 
 Page not found errors will return a 410 and not log. The simplest way to change this is to use an `onMissingTemplate` method in your application. See the commented out example in `application.cfc`
 
+```javascript
+if ( validation.failed ) {
+	throw(type="badrequest");
+}
+```
+
 ## Custom errors
 
 The default user message is "Sorry an error has occurred". This can be changed in two ways: either by supplying a different value when instantiating the object, or by setting the error type to `custom`, which will show the thrown error message to the user.
 
+These are only displayed if the template (see [Error templates(#templates)]) is set to show them.
+
 ### Changing default message
 
-```cfscript
+```javascript
 onError(e) {
 	new cferrorHandler.errorHandler(error=e, message="Lo sentimos, se ha producido un error.");
 }
@@ -111,8 +121,8 @@ onError(e) {
 
 ### Custom type
 
-```
-throw(message="Custom message for user",detail="This won't be shown",type="custom");
+```javascript
+throw(message="Custom message for user",detail="Detail still remains private",type="custom");
 ```
 
 ## SQL Errors
@@ -121,7 +131,7 @@ Error handler works well with queries run using `queryExecute`. When keys `sql` 
 
 E.g.
 
-```cfml
+```javascript
 try {
 	vals = queryExecute( sql, params );
 }
@@ -137,7 +147,7 @@ catch (any e) {
 
 Produces SQL like:
 
-```
+```sql
 DECLARE @live BIT  = 1 ;
 DECLARE @pubdate DATETIME  = {ts '2025-09-17 07:55:15'} ;
 DECLARE @headline VARCHAR(max)  = '%man bites dog%' ;
@@ -152,13 +162,14 @@ DECLARE @pubdate2 DATE  = {d '2025-09-21'} ;
 	AND    articles_types_id in ( 1,2,3 ) 
 ```
 
-## Error Templates
+## Error Templates { #templates}
 
 An html template to display to the end user can be specified in the argument `pageTemplate`. It uses mustache-like syntax ( i.e. `{{fieldname}}` ), with the following fields:
 
 | field       | description
 |-------------|----------------------------------
 | usermessage | Public error message
-| code        | error code from a cfthrow
+| code        | error code from a cfthrow (not always set)
 | statustext  | http status text
 | id          | error UUID - can be made public and used to diagnose the error from your logs
+

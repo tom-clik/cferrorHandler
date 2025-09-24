@@ -1,9 +1,8 @@
 /**
  * Log errors to cflog.
  *
- * Not particularly useful, used as a fallback
- *
  * See errorHandler
+ * 
  */
 component implements="loggerInterface" {
 
@@ -15,6 +14,7 @@ component implements="loggerInterface" {
 		
 		cflog( type="error", text=arguments.error.message );
 		return true;
+		
 	}
 
 }

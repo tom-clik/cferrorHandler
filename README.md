@@ -135,9 +135,26 @@ catch (any e) {
 	);
 ```
 
+Produces SQL like:
+
+```
+DECLARE @live BIT  = 1 ;
+DECLARE @pubdate DATETIME  = {ts '2025-09-17 07:55:15'} ;
+DECLARE @headline VARCHAR(max)  = '%man bites dog%' ;
+DECLARE @pubdate2 DATE  = {d '2025-09-21'} ;
+
+	SELECT *
+	FROM   articles
+	WHERE  live = @live
+	AND    pubdate > @pubdate
+	AND    pubdate < @pubdate2
+	AND    headline like @headline
+	AND    articles_types_id in ( 1,2,3 ) 
+```
+
 ## Error Templates
 
-An html template to display to the end user can be specified in the argument `pageTemplate`. It uses mustache like syntax ( i.e. `{{fieldname}}` ), with the following fields:
+An html template to display to the end user can be specified in the argument `pageTemplate`. It uses mustache-like syntax ( i.e. `{{fieldname}}` ), with the following fields:
 
 | field       | description
 |-------------|----------------------------------

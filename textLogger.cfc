@@ -24,7 +24,8 @@ component implements="loggerInterface" {
 			local.errorCode = 1;
 		}
 		catch (any e) {
-			// ignore failure to write to log
+			// Note failure to write to log but continue
+			cflog( type="error", text="Unable to write log file:#e.message#" );
 		}
 		
 		return local.errorCode;

@@ -162,7 +162,7 @@ DECLARE @pubdate2 DATE  = {d '2025-09-21'} ;
 	AND    articles_types_id in ( 1,2,3 ) 
 ```
 
-## Error Templates
+## Error Templates { #templates}
 
 An html template to display to the end user can be specified in the argument `pageTemplate`. It uses mustache-like syntax ( i.e. `{{fieldname}}` ), with the following fields:
 

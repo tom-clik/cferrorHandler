@@ -54,7 +54,8 @@ catch (any e) {
 	local.args = {
 		error=e,
 		abort=0,
-		extendedinfo = local.extendedinfo
+		extendedinfo = local.extendedinfo,
+		dbtype = 'mysql'
 	};
 
 	// again, we want to demo the debug sql field so we don't abort and return the error

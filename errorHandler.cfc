@@ -47,6 +47,7 @@ component accessors="true" {
 	 * @message        Error to display to user. Note that if the "type" of the exception is "custom", the exception error message will be shown.
 	 * @ExtendedInfo   DEPRECATED Manually supply extended info when using as a logger.
 	 * @abort          Abort and show error page (or dump if debug)
+	 * @dbtype         mysql|mssql for flavour of debug SQL (see notes on adding `SQL` and `Params` to extended info)
 	 */
 	public void function init(
 		         any      error = {}, 
@@ -56,12 +57,14 @@ component accessors="true" {
 		         any      logger,
 		         string   message = "Sorry, an error has occurred",
 		         struct   ExtendedInfo,
-		         boolean  abort=1
+		         boolean  abort=1,
+		         string   dbtype="mysql"
 		) {
 
 		if ( arguments.keyExists("logger") ) {
 			variables.logger = arguments.logger;
 		}
+		variables.dbtype = arguments.dbtype;
 
 		// legacy 'e' alias for error
 		if ( arguments.keyExists("e") ) {
@@ -282,7 +285,12 @@ component accessors="true" {
 			// no simple way to handle list values so we just inline them
 			if (! list) {
 				val_str = ( paramvals.null ? : false ) ? "" : " = " & val;
-				ret &= "DECLARE @#param# #type# #val_str# ;" & newLine();
+				if (variables.dbtype eq "mssql") {
+					ret &= "DECLARE @#param# #type# #val_str# ;" & newLine();
+				}
+				else {
+					ret &= "SET @#param# = #val_str# ;" & newLine();
+				}
 			}
 			else {
 				arguments.SQL = Replace(arguments.SQL,":#param#",val,"all");
@@ -301,6 +309,8 @@ component accessors="true" {
 		switch (type) {
 			case "integer": case "cf_sql_integer": case "int": case "cf_sql_int": 
 				return "INT";
+			case "numeric": case "cf_sql_numeric": case "decimal": case "cf_sql_decimal": 
+				return "NUMERIC";
 			case "boolean": case "bit": case "cf_sql_bit": case "cf_sql_boolean": 
 				return "BIT";
 			case "cf_sql_date": case "date":  
@@ -318,13 +328,18 @@ component accessors="true" {
 		}
 
 		switch (arguments.sqltype) {
-			case "INT":
+			case "INT":case "NUMERIC":
 				return arguments.val;	
 			case "BIT":
 				return isBoolean( arguments.val ) && arguments.val ? "1" : "0" ;
 			case "DATE":
 				try {
-					dateVal = CreateODBCDate(arguments.val);
+					if (variables.dbtype eq "mssql") {
+						dateVal = CreateODBCDate(arguments.val);
+					}
+					else {
+						return "'#DateFormat(arguments.val,'YYYY-MM-DD')#'";
+					}
 				}
 				catch (any e) {
 					dateVal = arguments.val;
@@ -332,7 +347,12 @@ component accessors="true" {
 				return dateVal;
 			case "DATETIME":
 				try {
-					dateVal = CreateODBCDateTime(arguments.val);
+					if (variables.dbtype eq "mssql") {
+						dateVal = CreateODBCDateTime(arguments.val);
+					}
+					else {
+						return "'#DateFormat(arguments.val,'YYYY-MM-DD')# #TIMEFORMAT(arguments.val,'HH:mm:ss')#";
+					}
 				}
 				catch (any e) {
 					dateVal = arguments.val;

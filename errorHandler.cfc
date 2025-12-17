@@ -91,6 +91,9 @@ component accessors="true" {
 			else if ( StructKeyExists(arguments.error, "ExtendedInfo" ) && arguments.error["ExtendedInfo"] != "" ) {
 				variables.ExtendedInfo = deserializeJSON(arguments.error["ExtendedInfo"]);
 			}
+			else {
+				variables.ExtendedInfo = "";
+			}
 			// You can catch nested errors by adding error to ExtendedInfo
 			if ( isStruct( variables.ExtendedInfo ) ) {
 				getRecursiveInfo( variables.ExtendedInfo );
@@ -289,7 +292,7 @@ component accessors="true" {
 					ret &= "DECLARE @#param# #type# #val_str# ;" & newLine();
 				}
 				else {
-					ret &= "SET @#param# = #val_str# ;" & newLine();
+					ret &= "SET @#param# #val_str# ;" & newLine();
 				}
 			}
 			else {
@@ -351,7 +354,7 @@ component accessors="true" {
 						dateVal = CreateODBCDateTime(arguments.val);
 					}
 					else {
-						return "'#DateFormat(arguments.val,'YYYY-MM-DD')# #TIMEFORMAT(arguments.val,'HH:mm:ss')#";
+						return "'#DateFormat(arguments.val,'YYYY-MM-DD')# #TIMEFORMAT(arguments.val,'HH:mm:ss')#'";
 					}
 				}
 				catch (any e) {

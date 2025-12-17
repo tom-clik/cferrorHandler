@@ -69,24 +69,32 @@ component accessors="true" {
 		}
 
 		// it's fine to supply your own struct as an error, here we check the required fields
-		StructAppend(arguments.error, {"message"="Message not specified","detail"="","errorcode"="","ExtendedInfo"="","type"="error","TagContext"=[]}, false);
+		StructAppend(arguments.error, {"message"="Message not specified","detail"="","errorcode"="","type"="error","TagContext"=[]}, false);
 
 		variables.usermessage = arguments.message;
 		variables.message =arguments.error.message;
 		variables.detail =arguments.error.detail;
 		variables.code =arguments.error.errorcode;
-		variables.ExtendedInfo = deserializeJSON(arguments.error.ExtendedInfo);
-		variables.type =arguments.error.type;
-		
 
 		// when using the handler as a logger, sometimes we just want to supply this
 		if ( StructKeyExists( arguments, "ExtendedInfo" ) ) {
 			variables.ExtendedInfo = arguments.ExtendedInfo;
 		}
-		// You can catch nested errors by adding error to ExtendedInfo
-		else if ( isStruct( variables.ExtendedInfo ) ) {
-			getRecursiveInfo( variables.ExtendedInfo );
+		// Lucee version 6+ breaking change
+		else {
+			if ( StructKeyExists(arguments.error, "Extended Info" ) ) {
+				variables.ExtendedInfo = deserializeJSON(arguments.error["Extended Info"]);
+			}
+			else if ( StructKeyExists(arguments.error, "ExtendedInfo" ) ) {
+				variables.ExtendedInfo = deserializeJSON(arguments.error["ExtendedInfo"]);
+			}
+			// You can catch nested errors by adding error to ExtendedInfo
+			if ( isStruct( variables.ExtendedInfo ) ) {
+				getRecursiveInfo( variables.ExtendedInfo );
+			}
 		}
+		
+		variables.type =arguments.error.type;
 		
 		//supply original tag context in extended info if you have caught and rethrown an error
 		if ( isStruct( variables.ExtendedInfo ) AND variables.ExtendedInfo.keyExists( "tagcontext" ) ) {

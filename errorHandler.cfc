@@ -69,7 +69,7 @@ component accessors="true" {
 		}
 
 		// it's fine to supply your own struct as an error, here we check the required fields
-		StructAppend(arguments.error, {"message"="Message not specified","detail"="","errorcode"="","type"="error","TagContext"=[]}, false);
+		StructAppend(arguments.error, {"message"="Message not specified","detail"="","errorcode"="","type"="error","TagContext"=[],"ExtendedInfo"=""}, false);
 
 		variables.usermessage = arguments.message;
 		variables.message =arguments.error.message;
@@ -82,10 +82,10 @@ component accessors="true" {
 		}
 		// Lucee version 6+ breaking change
 		else {
-			if ( StructKeyExists(arguments.error, "Extended Info" ) ) {
+			if ( StructKeyExists(arguments.error, "Extended Info" ) && arguments.error["Extended Info"] != "") {
 				variables.ExtendedInfo = deserializeJSON(arguments.error["Extended Info"]);
 			}
-			else if ( StructKeyExists(arguments.error, "ExtendedInfo" ) ) {
+			else if ( StructKeyExists(arguments.error, "ExtendedInfo" ) && arguments.error["ExtendedInfo"] != "" ) {
 				variables.ExtendedInfo = deserializeJSON(arguments.error["ExtendedInfo"]);
 			}
 			// You can catch nested errors by adding error to ExtendedInfo
@@ -225,7 +225,7 @@ component accessors="true" {
 
 			arguments.ExtendedInfo.tagcontext = arguments.ExtendedInfo.error.tagcontext;
 
-			if ( arguments.ExtendedInfo.error.keyExists("ExtendedInfo") ) {
+			if ( arguments.ExtendedInfo.error.keyExists("ExtendedInfo") && arguments.ExtendedInfo.error.ExtendedInfo != "" ) {
 				local.info = deserializeJSON(arguments.ExtendedInfo.error.ExtendedInfo);
 				if ( isStruct(local.info) ) {
 					getRecursiveInfo(local.info);

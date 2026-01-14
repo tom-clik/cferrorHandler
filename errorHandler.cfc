@@ -78,7 +78,8 @@ component accessors="true" {
 		variables.message =arguments.error.message;
 		variables.detail =arguments.error.detail;
 		variables.code =arguments.error.errorcode;
-
+		variables.ExtendedInfo =arguments.error.ExtendedInfo;
+		
 		// when using the handler as a logger, sometimes we just want to supply this
 		if ( StructKeyExists( arguments, "ExtendedInfo" ) ) {
 			variables.ExtendedInfo = arguments.ExtendedInfo;
@@ -88,7 +89,7 @@ component accessors="true" {
 			if ( StructKeyExists(arguments.error, "Extended Info" ) && arguments.error["Extended Info"] != "") {
 				variables.ExtendedInfo = deserializeJSON(arguments.error["Extended Info"]);
 			}
-			else if ( StructKeyExists(arguments.error, "ExtendedInfo" ) && arguments.error["ExtendedInfo"] != "" ) {
+			else if ( arguments.error["ExtendedInfo"] != "" ) {
 				variables.ExtendedInfo = deserializeJSON(arguments.error["ExtendedInfo"]);
 			}
 			else {

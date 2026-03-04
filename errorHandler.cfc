@@ -87,10 +87,10 @@ component accessors="true" {
 		// Lucee version 6+ breaking change
 		else {
 			if ( StructKeyExists(arguments.error, "Extended Info" ) && arguments.error["Extended Info"] != "") {
-				variables.ExtendedInfo = deserializeJSON(arguments.error["Extended Info"]);
+				variables.ExtendedInfo = parseExtendedInfo(arguments.error["Extended Info"]);
 			}
 			else if ( arguments.error["ExtendedInfo"] != "" ) {
-				variables.ExtendedInfo = deserializeJSON(arguments.error["ExtendedInfo"]);
+				variables.ExtendedInfo = parseExtendedInfo(arguments.error["ExtendedInfo"]);
 			}
 			else {
 				variables.ExtendedInfo = "";
@@ -224,6 +224,15 @@ component accessors="true" {
 			
 		}
 
+	}
+
+
+	private any function parseExtendedInfo(required any rawValue) {
+		if ( isSimpleValue(arguments.rawValue) && isJSON(arguments.rawValue) ) {
+			return deserializeJSON(arguments.rawValue);
+		}
+
+		return arguments.rawValue;
 	}
 
 	private void function getRecursiveInfo( required struct ExtendedInfo ) {

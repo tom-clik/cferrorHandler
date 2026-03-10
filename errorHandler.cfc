@@ -39,7 +39,7 @@ component accessors="true" {
 	/**
 	 * Initialise error
 	 * 
-	 * @error          CFML exception
+	 * @error          CFML exception || Manually defined struct
 	 * @ajax           Return JSON formatted version
 	 * @pageTemplate   Page template for error display. The fields "usermessage","code","statustext","id" should be enclosed in double braces {{}} (mustache style)
 	 * @debug          Dump the error instead of displaying error page
@@ -122,10 +122,7 @@ component accessors="true" {
 			catch (any debugsqle) {
 				variables.debugsql = "Unable to create debug query: #debugsqle.message#";
 			}
-
 		}
-
-
 		
 		switch ( type ) {
 			case  "badrequest": case "validation":
@@ -157,6 +154,16 @@ component accessors="true" {
 			case  "custom":
 				// custom errors show thrown message
 				variables.usermessage  = variables.message;
+				break;
+			case  "expression":
+				// Guess parameter validation error
+				if ( findNoCase("required parameter", variables.message) OR
+					findNoCase("the value", variables.message)
+					) {
+					variables.statuscode="400";
+					variables.statustext="Bad Request";
+					variables.report = 0;
+				}
 				break;
 			
 

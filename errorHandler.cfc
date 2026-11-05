@@ -246,7 +246,9 @@ component accessors="true" {
 
 		if ( arguments.ExtendedInfo.keyExists( "error" ) ) {
 
-			arguments.ExtendedInfo.tagcontext = arguments.ExtendedInfo.error.tagcontext;
+			if ( arguments.ExtendedInfo.error.keyExists("tagcontext") ) {
+				arguments.ExtendedInfo.tagcontext = arguments.ExtendedInfo.error.tagcontext;
+			}
 
 			if ( arguments.ExtendedInfo.error.keyExists("ExtendedInfo") && arguments.ExtendedInfo.error.ExtendedInfo != "" ) {
 				local.info = deserializeJSON(arguments.ExtendedInfo.error.ExtendedInfo);
